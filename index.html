@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoCharge Fleet Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div class="brand-text">
+        <strong>EcoCharge</strong>
+        <span>Fleet Dashboard</span>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Primary">
+      <button id="tab-fleet" class="tab is-active" role="tab" aria-selected="true">Fleet Overview</button>
+      <button id="tab-calc" class="tab" role="tab" aria-selected="false">Charging Cost Calculator</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="fleet-section" class="view" aria-labelledby="tab-fleet"></section>
+    <section id="calc-section" class="view" aria-labelledby="tab-calc" hidden></section>
+  </main>
+
+  <footer class="footer">
+    <small>© 2025 EcoCharge Innovations</small>
+  </footer>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
