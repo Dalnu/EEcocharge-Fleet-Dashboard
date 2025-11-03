@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <header class="topbar">
@@ -20,8 +20,8 @@
     </div>
 
     <nav class="tabs" role="tablist" aria-label="Primary">
-      <button id="tab-fleet" class="tab is-active" role="tab" aria-selected="true">Fleet Overview</button>
-      <button id="tab-calc" class="tab" role="tab" aria-selected="false">Charging Cost Calculator</button>
+      <button id="tab-fleet" class="tab is-active" role="tab" aria-selected="true" type="button">Fleet Overview</button>
+      <button id="tab-calc" class="tab" role="tab" aria-selected="false" type="button">Charging Cost Calculator</button>
     </nav>
   </header>
 
@@ -34,7 +34,11 @@
     <small>© 2025 EcoCharge Innovations</small>
   </footer>
 
-<script defer src="src/fleet.js?v=3"></script>
-<script defer src="src/app.js?v=3"></script>
+  <noscript>
+    <p style="padding:12px">This app requires JavaScript to display the fleet overview.</p>
+  </noscript>
+
+  <script defer src="src/fleet.js?v=3"></script>
+  <script defer src="src/app.js?v=3"></script>
 </body>
 </html>
