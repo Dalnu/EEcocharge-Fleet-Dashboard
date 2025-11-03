@@ -1,10 +1,8 @@
 // src/fleet.js
-// Plain JS (no modules). Exposes window.renderFleet for app.js to call.
-
 (function () {
   "use strict";
+  console.log("[fleet] script loaded");
 
-  // ---------- helpers ----------
   function clampBattery(n) {
     const v = Number(n);
     return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
@@ -38,16 +36,19 @@
   }
 
   async function loadVehicles() {
+    const url = "./data/vehicles.json";
+    console.log("[fleet] fetching", url);
     try {
-      const res = await fetch("./data/vehicles.json", { cache: "no-store" });
+      const res = await fetch(url, { cache: "no-store" });
+      console.log("[fleet] fetch status:", res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      // Accept either an array or { vehicles: [...] }
+      console.log("[fleet] json shape:", Array.isArray(json) ? "array" : typeof json);
       if (Array.isArray(json)) return json;
       if (Array.isArray(json.vehicles)) return json.vehicles;
       throw new Error("Unexpected JSON shape");
     } catch (e) {
-      console.warn("vehicles.json fetch failed, using fallback:", e);
+      console.warn("[fleet] fetch failed, using fallback:", e);
       return [
         {"id":"EV-101","model":"Nissan Leaf","battery":82,"status":"Available"},
         {"id":"EV-102","model":"Tesla Model 3","battery":35,"status":"Charging"},
@@ -63,11 +64,13 @@
     }
   }
 
-  // ---------- public API ----------
   window.renderFleet = async function renderFleet(rootEl) {
-    if (!rootEl) return;
+    console.log("[fleet] renderFleet called");
+    if (!rootEl) {
+      console.error("[fleet] rootEl missing");
+      return;
+    }
 
-    // Shell
     rootEl.innerHTML = `
       <div class="card">
         <h2 style="margin:0 0 14px 2px">Fleet Overview</h2>
@@ -86,9 +89,22 @@
         </div>
       </div>`;
 
-    // Data + rows
     const tbody = rootEl.querySelector("#fleet-table tbody");
-    const vehicles = await loadVehicles();
-    tbody.innerHTML = vehicles.map(rowHTML).join("");
+
+    try {
+      const vehicles = await loadVehicles();
+      console.log("[fleet] vehicles length:", vehicles.length);
+      tbody.innerHTML = vehicles.map(rowHTML).join("");
+      if (!vehicles.length) {
+        tbody.innerHTML = `<tr><td colspan="4">No vehicles found.</td></tr>`;
+      }
+    } catch (e) {
+      console.error("[fleet] render error:", e);
+      rootEl.innerHTML = `
+        <div class="card">
+          <h2>Fleet Overview</h2>
+          <p style="color:#fca5a5">Error rendering fleet: ${String(e)}</p>
+        </div>`;
+    }
   };
 })();
