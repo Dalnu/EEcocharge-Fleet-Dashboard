@@ -1,0 +1,12 @@
+[
+    {"id":"EV-101","model":"Nissan Leaf","battery":82,"status":"Available"},
+    {"id":"EV-102","model":"Tesla Model 3","battery":35,"status":"Charging"},
+    {"id":"EV-103","model":"Renault Zoe","battery":57,"status":"On Trip"},
+    {"id":"EV-104","model":"Hyundai Kona","battery":90,"status":"Available"},
+    {"id":"EV-105","model":"BMW i3","battery":16,"status":"Charging"},
+    {"id":"EV-106","model":"Kia Niro EV","battery":64,"status":"Available"},
+    {"id":"EV-107","model":"VW ID.3","battery":41,"status":"On Trip"},
+    {"id":"EV-108","model":"Chevy Bolt","battery":73,"status":"Available"},
+    {"id":"EV-109","model":"BYD Dolphin","battery":52,"status":"Available"},
+    {"id":"EV-110","model":"MG4 EV","battery":28,"status":"Charging"}
+  ]  
