@@ -1,16 +1,17 @@
 // src/fleet.js
-// Plain JS (no modules). Defines window.renderFleet for app.js to call.
+// Plain JS (no modules). Exposes window.renderFleet for app.js to call.
 
 (function () {
   "use strict";
 
-  function clamp01to100(n) {
+  // ---------- helpers ----------
+  function clampBattery(n) {
     const v = Number(n);
     return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
   }
 
   function batteryBar(percent) {
-    const p = clamp01to100(percent);
+    const p = clampBattery(percent);
     return `
       <div class="battery" aria-label="Battery ${p}%">
         <span style="width:${p}%"></span>
@@ -41,6 +42,7 @@
       const res = await fetch("./data/vehicles.json", { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
+      // Accept either an array or { vehicles: [...] }
       if (Array.isArray(json)) return json;
       if (Array.isArray(json.vehicles)) return json.vehicles;
       throw new Error("Unexpected JSON shape");
@@ -61,10 +63,11 @@
     }
   }
 
-  // Expose globally so app.js can call it
+  // ---------- public API ----------
   window.renderFleet = async function renderFleet(rootEl) {
     if (!rootEl) return;
 
+    // Shell
     rootEl.innerHTML = `
       <div class="card">
         <h2 style="margin:0 0 14px 2px">Fleet Overview</h2>
@@ -83,6 +86,7 @@
         </div>
       </div>`;
 
+    // Data + rows
     const tbody = rootEl.querySelector("#fleet-table tbody");
     const vehicles = await loadVehicles();
     tbody.innerHTML = vehicles.map(rowHTML).join("");
