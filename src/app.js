@@ -1,6 +1,6 @@
 // src/app.js
 // Controls tabs and renders the Fleet view (Feature A).
-// Assumes index.html loads scripts in this order:
+// The index.html loads scripts in this order:
 //   1) src/fleet.js
 //   2) src/app.js
 (function () {
@@ -37,15 +37,24 @@
     fleetSection.dataset.ready = "1";
   }
 
-  function renderCalcPlaceholderOnce() {
-    if (calcSection.dataset.ready === "1") return;
-    calcSection.innerHTML = `
-      <div class="card">
-        <h2>Charging Cost Calculator</h2>
-        <p>The calculator will appear here once Feature B is merged.</p>
-      </div>`;
-    calcSection.dataset.ready = "1";
+// for the calc:
+function renderCalcOnce() {
+  if (calcSection.dataset.ready === "1") return;
+  if (typeof window.renderCalc !== "function") {
+    calcSection.innerHTML =
+      `<div class="card"><p>Load order error: <code>calc.js</code> not loaded.</p></div>`;
+    console.error("renderCalc is not defined. Ensure calc.js loads before app.js.");
+    return;
   }
+  window.renderCalc(calcSection);
+  calcSection.dataset.ready = "1";
+}
+
+// update the Calc tab click handler:
+tabCalc.addEventListener("click", () => {
+  setActive("calc");
+  renderCalcOnce();
+});
 
   // ---- Events ----
   tabFleet.addEventListener("click", async () => {
