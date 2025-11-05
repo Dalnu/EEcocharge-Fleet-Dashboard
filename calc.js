@@ -1,27 +1,27 @@
-// calc.js
+// src/calc.js
 (function () {
   "use strict";
 
   const CHARGER_KW = 7.5;      // kW
   const PRICE_PER_KWH = 0.15;  // $ per kWh
 
-  // Pure function (good for tests)
-function calculateCost(hours) {
-  const h = Number(hours);
+  // Pure function (good for tests and README snippet)
+  function calculateCost(hours) {
+    const raw = String(hours ?? "");
+    const h = Number(raw);
 
-  // Check for invalid input
-  if (!Number.isFinite(h) || hours.trim() === "" || isNaN(h) || h < 0) {
-    throw new Error("Invalid input");
+    // invalid: empty, NaN/Infinity, negative
+    if (raw.trim() === "" || !Number.isFinite(h) || Number.isNaN(h) || h < 0) {
+      throw new Error("Invalid input");
+    }
+    return h * CHARGER_KW * PRICE_PER_KWH;
   }
 
-  return h * CHARGER_KW * PRICE_PER_KWH;
-}
-
-  // expose for tests if needed
+  // Expose for tests and console sanity checks
   window.calculateCost = calculateCost;
 
-  // render calculator UI
-  window.renderCalc = function renderCalc(rootEl) {
+  // Render calculator UI
+  function renderCalc(rootEl) {
     if (!rootEl) return;
 
     rootEl.innerHTML = `
@@ -30,7 +30,7 @@ function calculateCost(hours) {
 
         <div class="form-row">
           <label for="vehicle">Select Vehicle</label><br/>
-          <select id="vehicle">
+          <select id="vehicle" aria-label="Select vehicle">
             <option>EV-101 — Nissan Leaf</option>
             <option>EV-102 — Tesla Model 3</option>
             <option>EV-103 — Renault Zoe</option>
@@ -72,5 +72,8 @@ function calculateCost(hours) {
         resultEl.textContent = "Please enter a valid number of hours (0 or more).";
       }
     });
-  };
+  }
+
+  // expose UI renderer
+  window.renderCalc = renderCalc;
 })();
