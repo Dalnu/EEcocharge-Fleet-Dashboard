@@ -7,13 +7,11 @@
 (function () {
   "use strict";
 
-  // ---- Element refs ----
   const fleetSection = document.getElementById("fleet-section");
   const calcSection  = document.getElementById("calc-section");
   const tabFleet     = document.getElementById("tab-fleet");
   const tabCalc      = document.getElementById("tab-calc");
 
-  // ---- Helpers ----
   function setActive(which) {
     const isFleet = which === "fleet";
     fleetSection.hidden = !isFleet;
@@ -27,34 +25,30 @@
 
   async function renderFleetOnce() {
     if (fleetSection.dataset.ready === "1") return;
-
     if (typeof window.renderFleet !== "function") {
       fleetSection.innerHTML =
         `<div class="card"><p>Load order error: <code>fleet.js</code> not loaded.</p></div>`;
-      console.error("[app] renderFleet is not defined. Ensure src/fleet.js loads before src/app.js.");
+      console.error("[app] renderFleet undefined — ensure src/fleet.js loads before src/app.js");
       return;
     }
-
     await window.renderFleet(fleetSection);
     fleetSection.dataset.ready = "1";
   }
 
   function renderCalcOnce() {
     if (calcSection.dataset.ready === "1") return;
-
     if (typeof window.renderCalc !== "function") {
       calcSection.innerHTML =
         `<div class="card"><p>Load order error: <code>calc.js</code> not loaded.</p></div>`;
-      console.error("[app] renderCalc is not defined. Ensure src/calc.js loads before src/app.js.");
+      console.error("[app] renderCalc undefined — ensure src/calc.js loads before src/app.js");
       calcSection.dataset.ready = "1";
       return;
     }
-
     window.renderCalc(calcSection);
     calcSection.dataset.ready = "1";
   }
 
-  // ---- Events ----
+  // Single, correct set of listeners
   tabFleet.addEventListener("click", async () => {
     setActive("fleet");
     await renderFleetOnce();
@@ -65,7 +59,7 @@
     renderCalcOnce();
   });
 
-  // Keyboard accessibility (Enter/Space to activate tabs)
+  // Keyboard accessibility
   [tabFleet, tabCalc].forEach(btn => {
     btn.setAttribute("tabindex", "0");
     btn.addEventListener("keydown", (e) => {
@@ -76,7 +70,6 @@
     });
   });
 
-  // ---- Initial view ----
   setActive("fleet");
   renderFleetOnce();
 })();
