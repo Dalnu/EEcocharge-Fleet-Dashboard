@@ -1,9 +1,5 @@
 // src/app.js
-// Controls tabs and renders Fleet (Feature A) + Calculator (Feature B).
-// IMPORTANT: index.html must load scripts in this order:
-//   1) src/fleet.js
-//   2) src/calc.js
-//   3) src/app.js
+// Loads Fleet (A) and Calculator (B). Will auto-load calc.js if needed.
 (function () {
   "use strict";
 
@@ -28,27 +24,46 @@
     if (typeof window.renderFleet !== "function") {
       fleetSection.innerHTML =
         `<div class="card"><p>Load order error: <code>fleet.js</code> not loaded.</p></div>`;
-      console.error("[app] renderFleet undefined — ensure src/fleet.js loads before src/app.js");
+      console.error("[app] renderFleet undefined — ensure src/fleet.js loads.");
       return;
     }
     await window.renderFleet(fleetSection);
     fleetSection.dataset.ready = "1";
   }
 
-  function renderCalcOnce() {
-    if (calcSection.dataset.ready === "1") return;
-    if (typeof window.renderCalc !== "function") {
-      calcSection.innerHTML =
-        `<div class="card"><p>Load order error: <code>calc.js</code> not loaded.</p></div>`;
-      console.error("[app] renderCalc undefined — ensure src/calc.js loads before src/app.js");
-      calcSection.dataset.ready = "1";
-      return;
-    }
-    window.renderCalc(calcSection);
-    calcSection.dataset.ready = "1";
+  // --- NEW: lazy loader for calc.js ---
+  function ensureCalcLoaded() {
+    return new Promise((resolve, reject) => {
+      if (typeof window.renderCalc === "function") return resolve();
+
+      // inject <script> with a cache-busting query
+      const s = document.createElement("script");
+      s.src = `src/calc.js?v=${Date.now()}`;
+      s.defer = true;
+      s.onload = () => {
+        if (typeof window.renderCalc === "function") resolve();
+        else reject(new Error("calc.js loaded but window.renderCalc missing"));
+      };
+      s.onerror = () => reject(new Error("Failed to load src/calc.js (404/blocked)"));
+      document.head.appendChild(s);
+    });
   }
 
-  // Single, correct set of listeners
+  async function renderCalcOnce() {
+    if (calcSection.dataset.ready === "1") return;
+    try {
+      await ensureCalcLoaded();                 // <-- guarantees availability
+      window.renderCalc(calcSection);
+      calcSection.dataset.ready = "1";
+    } catch (err) {
+      calcSection.innerHTML =
+        `<div class="card"><p>Load error: <code>calc.js</code> not loaded. ${err.message}</p></div>`;
+      console.error("[app] renderCalc error:", err);
+      calcSection.dataset.ready = "1";
+    }
+  }
+
+  // Events
   tabFleet.addEventListener("click", async () => {
     setActive("fleet");
     await renderFleetOnce();
@@ -70,6 +85,7 @@
     });
   });
 
+  // Initial view
   setActive("fleet");
   renderFleetOnce();
 })();
