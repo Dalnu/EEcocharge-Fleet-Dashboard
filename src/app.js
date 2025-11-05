@@ -1,16 +1,17 @@
 // src/app.js
-// Controls tabs and renders the Fleet view (Feature A).
-// The index.html loads scripts in this order:
+// Controls tabs and renders Fleet (Feature A) + Calculator (Feature B).
+// IMPORTANT: index.html must load scripts in this order:
 //   1) src/fleet.js
-//   2) src/app.js
+//   2) src/calc.js
+//   3) src/app.js
 (function () {
   "use strict";
 
   // ---- Element refs ----
   const fleetSection = document.getElementById("fleet-section");
   const calcSection  = document.getElementById("calc-section");
-  const tabFleet = document.getElementById("tab-fleet");
-  const tabCalc  = document.getElementById("tab-calc");
+  const tabFleet     = document.getElementById("tab-fleet");
+  const tabCalc      = document.getElementById("tab-calc");
 
   // ---- Helpers ----
   function setActive(which) {
@@ -25,36 +26,33 @@
   }
 
   async function renderFleetOnce() {
-    // Only render the fleet table once
     if (fleetSection.dataset.ready === "1") return;
+
     if (typeof window.renderFleet !== "function") {
       fleetSection.innerHTML =
         `<div class="card"><p>Load order error: <code>fleet.js</code> not loaded.</p></div>`;
-      console.error("renderFleet is not defined. Ensure src/fleet.js loads before src/app.js.");
+      console.error("[app] renderFleet is not defined. Ensure src/fleet.js loads before src/app.js.");
       return;
     }
+
     await window.renderFleet(fleetSection);
     fleetSection.dataset.ready = "1";
   }
 
-// for the calc:
-function renderCalcOnce() {
-  if (calcSection.dataset.ready === "1") return;
-  if (typeof window.renderCalc !== "function") {
-    calcSection.innerHTML =
-      `<div class="card"><p>Load order error: <code>calc.js</code> not loaded.</p></div>`;
-    console.error("renderCalc is not defined. Ensure calc.js loads before app.js.");
-    return;
-  }
-  window.renderCalc(calcSection);
-  calcSection.dataset.ready = "1";
-}
+  function renderCalcOnce() {
+    if (calcSection.dataset.ready === "1") return;
 
-// update the Calc tab click handler:
-tabCalc.addEventListener("click", () => {
-  setActive("calc");
-  renderCalcOnce();
-});
+    if (typeof window.renderCalc !== "function") {
+      calcSection.innerHTML =
+        `<div class="card"><p>Load order error: <code>calc.js</code> not loaded.</p></div>`;
+      console.error("[app] renderCalc is not defined. Ensure src/calc.js loads before src/app.js.");
+      calcSection.dataset.ready = "1";
+      return;
+    }
+
+    window.renderCalc(calcSection);
+    calcSection.dataset.ready = "1";
+  }
 
   // ---- Events ----
   tabFleet.addEventListener("click", async () => {
@@ -64,7 +62,7 @@ tabCalc.addEventListener("click", () => {
 
   tabCalc.addEventListener("click", () => {
     setActive("calc");
-    renderCalcPlaceholderOnce();
+    renderCalcOnce();
   });
 
   // Keyboard accessibility (Enter/Space to activate tabs)
