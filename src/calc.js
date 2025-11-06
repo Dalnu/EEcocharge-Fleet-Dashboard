@@ -3,32 +3,22 @@
   "use strict";
 
   // --- Constants (simple assumptions for the prototype) ---
-  const CHARGER_KW     = 7.5;     // charger power
-  const PRICE_PER_KWH  = 0.15;    // $/kWh
-  const BATTERY_KWH    = 60;      // assumed pack size for all vehicles (simplified)
+  const CHARGER_KW    = 7.5;   // charger power (kW)
+  const PRICE_PER_KWH = 0.15;  // $/kWh
+  const BATTERY_KWH   = 60;    // assumed pack size (kWh)
 
-  // --- Helpers ---
+  // --- Pure calc (exported for tests) ---
   function calculateCost(hours) {
-    // Normalize and validate *manually* so letters are allowed in the field,
-    // but rejected at calculation time (no scientific notation).
-    const raw0 = String(hours ?? "").trim();
-    const raw  = raw0.replace(",", "."); // accept comma decimals
-
-    // Accept forms: 2 | 2.5 | .5 | +1.2 | -0.3  (no exponent)
-    const PLAIN_NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
-
-    if (raw === "" || !PLAIN_NUMBER.test(raw)) {
-      throw new Error("Invalid input");
-    }
-
-    const h = Number(raw);
-    if (!Number.isFinite(h) || h < 0) {
+    const raw = String(hours ?? "");
+    const h   = Number(raw);
+    if (raw.trim() === "" || !Number.isFinite(h) || Number.isNaN(h) || h < 0) {
       throw new Error("Invalid input");
     }
     return h * CHARGER_KW * PRICE_PER_KWH;
   }
-  window.calculateCost = calculateCost; // keep exported for tests
+  window.calculateCost = calculateCost;
 
+  // --- Small helpers ---
   function clampBattery(n) {
     const v = Number(n);
     return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
@@ -81,7 +71,7 @@
   async function renderCalc(rootEl) {
     if (!rootEl) return;
 
-    // shell
+    // Shell
     rootEl.innerHTML = `
       <div class="card">
         <h2 style="margin:0 0 12px 2px">Charging Cost Calculator</h2>
@@ -95,16 +85,8 @@
 
         <div class="form-row">
           <label for="hours-input">Charging duration (hours)</label><br/>
-          <!-- CHANGED: text + inputmode so any letter can be typed; JS validates -->
-          <input
-            id="hours-input"
-            type="text"
-            inputmode="decimal"
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="e.g., 2.5"
-            aria-describedby="hours-hint"
-          />
+          <!-- NOTE: text (not number) so all keys are allowed; we validate on submit -->
+          <input id="hours-input" type="text" inputmode="decimal" placeholder="e.g., 2.5" />
         </div>
 
         <button id="calc-btn" class="primary" type="button">Calculate</button>
@@ -113,23 +95,35 @@
         <div id="availability-note" style="margin-top:6px;color:var(--muted)"></div>
         <div id="fullcharge-info" style="margin-top:6px;color:var(--muted)"></div>
 
-        <small id="hours-hint" style="color:var(--muted);display:block;margin-top:10px">
+        <small style="color:var(--muted);display:block;margin-top:10px">
           Formula: Cost = hours × ${CHARGER_KW} kW × \$${PRICE_PER_KWH.toFixed(2)}/kWh
           &nbsp;•&nbsp; Assumes ${BATTERY_KWH} kWh battery for “time to full”
         </small>
       </div>
     `;
 
-    const sel        = rootEl.querySelector("#vehicle-select");
-    const infoEl     = rootEl.querySelector("#vehicle-info");
-    const hoursEl    = rootEl.querySelector("#hours-input");
-    const resultEl   = rootEl.querySelector("#calc-result");
-    const noteEl     = rootEl.querySelector("#availability-note");
-    const fullEl     = rootEl.querySelector("#fullcharge-info");
-    const btn        = rootEl.querySelector("#calc-btn");
+    const sel      = rootEl.querySelector("#vehicle-select");
+    const infoEl   = rootEl.querySelector("#vehicle-info");
+    const hoursEl  = rootEl.querySelector("#hours-input");
+    const resultEl = rootEl.querySelector("#calc-result");
+    const noteEl   = rootEl.querySelector("#availability-note");
+    const fullEl   = rootEl.querySelector("#fullcharge-info");
+    const btn      = rootEl.querySelector("#calc-btn");
 
+    // --- Harden against cached DOM (force text field at runtime) ---
+    hoursEl.setAttribute("type", "text");
+    hoursEl.setAttribute("inputmode", "decimal");
+    hoursEl.autocomplete = "off";
+
+    // Optional: small UX helper – trim whitespace while typing
+    hoursEl.addEventListener("input", () => {
+      // keep as text; do not parse here (we validate on click)
+      // but collapse multiple spaces
+      hoursEl.value = hoursEl.value.replace(/\s+/g, " ");
+    });
+
+    // Load vehicles
     const vehicles = await loadVehicles();
-    // build options
     sel.innerHTML = vehicles.map((v, i) =>
       `<option value="${i}">${v.id} — ${v.model}</option>`
     ).join("");
@@ -143,15 +137,15 @@
       `;
 
       // pre-compute time & cost to full (only shown when Charging)
-      const kwhNeeded = (100 - p) / 100 * BATTERY_KWH;           // kWh
-      const hrsToFull = kwhNeeded / CHARGER_KW;                  // h
-      const costToFull = kwhNeeded * PRICE_PER_KWH;              // $
+      const kwhNeeded = (100 - p) / 100 * BATTERY_KWH; // kWh
+      const hrsToFull = kwhNeeded / CHARGER_KW;        // h
+      const costToFull = kwhNeeded * PRICE_PER_KWH;    // $
 
-      // availability hints (reset; shown on click too)
+      // reset hints
       noteEl.textContent = "";
       fullEl.textContent = "";
 
-      // store on element for reuse by click
+      // stash for click handler
       sel.dataset.kwhNeeded = String(Math.max(0, kwhNeeded));
       sel.dataset.hrsToFull = String(Math.max(0, hrsToFull));
       sel.dataset.costToFull = String(Math.max(0, costToFull));
