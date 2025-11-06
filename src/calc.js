@@ -1,7 +1,7 @@
 // src/calc.js
 (function () {
   "use strict";
-
+  
   // --- Constants (simple assumptions for the prototype) ---
   const CHARGER_KW    = 7.5;   // charger power (kW)
   const PRICE_PER_KWH = 0.15;  // $/kWh
