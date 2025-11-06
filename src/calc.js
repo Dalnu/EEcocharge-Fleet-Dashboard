@@ -9,9 +9,20 @@
 
   // --- Helpers ---
   function calculateCost(hours) {
-    const raw = String(hours ?? "");
+    // Normalize and validate *manually* so letters are allowed in the field,
+    // but rejected at calculation time (no scientific notation).
+    const raw0 = String(hours ?? "").trim();
+    const raw  = raw0.replace(",", "."); // accept comma decimals
+
+    // Accept forms: 2 | 2.5 | .5 | +1.2 | -0.3  (no exponent)
+    const PLAIN_NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
+
+    if (raw === "" || !PLAIN_NUMBER.test(raw)) {
+      throw new Error("Invalid input");
+    }
+
     const h = Number(raw);
-    if (raw.trim() === "" || !Number.isFinite(h) || Number.isNaN(h) || h < 0) {
+    if (!Number.isFinite(h) || h < 0) {
       throw new Error("Invalid input");
     }
     return h * CHARGER_KW * PRICE_PER_KWH;
@@ -84,7 +95,16 @@
 
         <div class="form-row">
           <label for="hours-input">Charging duration (hours)</label><br/>
-          <input id="hours-input" type="number" min="0" step="0.1" placeholder="e.g., 2.5" />
+          <!-- CHANGED: text + inputmode so any letter can be typed; JS validates -->
+          <input
+            id="hours-input"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="e.g., 2.5"
+            aria-describedby="hours-hint"
+          />
         </div>
 
         <button id="calc-btn" class="primary" type="button">Calculate</button>
@@ -93,7 +113,7 @@
         <div id="availability-note" style="margin-top:6px;color:var(--muted)"></div>
         <div id="fullcharge-info" style="margin-top:6px;color:var(--muted)"></div>
 
-        <small style="color:var(--muted);display:block;margin-top:10px">
+        <small id="hours-hint" style="color:var(--muted);display:block;margin-top:10px">
           Formula: Cost = hours × ${CHARGER_KW} kW × \$${PRICE_PER_KWH.toFixed(2)}/kWh
           &nbsp;•&nbsp; Assumes ${BATTERY_KWH} kWh battery for “time to full”
         </small>
